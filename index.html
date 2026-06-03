@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#3f2a1e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>OLD WORLD BATTLE TRACKER</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=EB+Garamond:wght@400;700&display=swap');
+    
+    body {
+      background: linear-gradient(rgba(10,7,4,0.94), rgba(10,7,4,0.94)), url('https://picsum.photos/id/1015/1920/1080') center/cover fixed;
+      touch-action: manipulation;
+    }
+    
+    .parchment {
+      position: relative;
+      background: url('empire-panel.png') center/cover no-repeat;
+      box-shadow: inset 0 0 80px rgba(139,69,19,0.5), 0 20px 40px rgba(0,0,0,0.7);
+      border: 12px solid #3f2a1e;
+      overflow: hidden;
+    }
+    
+    .gauge-container {
+      position: relative;
+      width: 360px;
+      height: 360px;
+      margin: 0 auto;
+    }
+    
+    .gauge {
+      position: absolute;
+      inset: 0;
+      background: conic-gradient(#b45309 0deg, #f59e0b var(--progress), #3f2a1e var(--progress));
+      border-radius: 50%;
+      border: 18px double #3f2a1e;
+      filter: drop-shadow(0 0 45px #f59e0b) drop-shadow(10px 15px 30px rgba(0,0,0,0.9));
+    }
+    
+    .gauge-skin {
+      position: absolute;
+      inset: -45px;
+      background: url('empire-gauge.png') center/cover;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 3;
+      mix-blend-mode: multiply;
+      opacity: 0.95;
+    }
+    
+    .player-name {
+      font-family: 'UnifrakturCook', serif;
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 3px 3px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .gothic-title { 
+      font-family: 'UnifrakturCook', serif; 
+      filter: drop-shadow(4px 6px 4px #3f2a1e) drop-shadow(0 0 15px #b45309); 
+    }
+
+    .table-header, .turn-number {
+      color: #ffffff !important;
+      text-shadow: 
+        -2px -2px 0 #000,
+        2px -2px 0 #000,
+        -2px 2px 0 #000,
+        2px 2px 0 #000,
+        0 0 10px #fff;
+      font-weight: 700;
+    }
+
+    .turn-panel {
+      background: url('turn-panel.png') center/cover no-repeat;
+      border: 8px solid #3f2a1e;
+      box-shadow: 0 0 40px rgba(245, 158, 11, 0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen font-serif">
+  <div class="max-w-7xl mx-auto p-4 md:p-8">
+    <div class="text-center mb-12">
+      <img src="title-logo.png" alt="Old World Battle Tracker" class="mx-auto mb-8 max-w-[70%] md:max-w-[50%] drop-shadow-2xl">
+    </div>
+
+    <!-- Turn Panel -->
+    <div class="mt-6 flex justify-center">
+      <div class="turn-panel w-full max-w-[460px] h-[130px] relative flex items-center justify-center">
+        <div class="flex items-center gap-6 md:gap-8">
+          <button onclick="prevTurn()" class="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-[#3f2a1e] hover:bg-red-900 rounded-2xl text-3xl md:text-4xl text-white">←</button>
+          
+          <div class="text-center">
+            <div class="text-amber-300 text-xs tracking-[3px] font-bold">TURN</div>
+            <div id="turn" class="text-7xl md:text-8xl font-bold text-white drop-shadow-2xl">1</div>
+          </div>
+
+          <button onclick="nextTurn()" class="bg-[#b45309] hover:bg-[#f59e0b] px-8 py-4 md:px-10 md:py-5 rounded-2xl text-lg md:text-xl font-bold text-white">NEXT TURN →</button>
+        </div>
+      </div>
+    </div>
+    <div id="maxTurn" class="text-[#f5e8c7] text-lg md:text-xl mt-4 font-bold tracking-widest text-center">of 6 turns</div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 mt-12">
+      <!-- Player 1 -->
+      <div class="parchment rounded-3xl p-6 md:p-10 shadow-2xl">
+        <div class="mb-8 text-center">
+          <input id="p1name" onchange="saveGame()" value="Empire" class="player-name">
+        </div>
+        
+        <div class="gauge-container">
+          <div id="p1gauge" class="gauge" style="--progress: 120deg;"></div>
+          <div class="gauge-skin"></div>
+          <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none z-10">
+            <div class="text-center drop-shadow-md">
+              <div id="p1total" class="text-7xl md:text-8xl font-bold text-[#3f2a1e]">0</div>
+              <div class="text-xs tracking-[3px] text-[#8c5a2b] -mt-2">VICTORY POINTS</div>
+            </div>
+          </div>
+        </div>
+
+        <table class="w-full mt-10 text-[#3f2a1e]">
+          <thead>
+            <tr class="text-sm">
+              <th class="py-4 table-header">Turn</th>
+              <th class="py-4 table-header">VP Gained</th>
+              <th class="py-4 table-header">Cumulative</th>
+            </tr>
+          </thead>
+          <tbody id="p1log" class="text-xl"></tbody>
+        </table>
+
+        <div class="mt-8 flex gap-3">
+          <input id="p1vp" type="number" placeholder="VP" class="bg-[#3f2a1e] text-[#f5e8c7] text-center w-28 py-5 rounded-3xl text-3xl focus:outline-none">
+          <button onclick="addVP(1)" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white py-5 rounded-3xl text-lg font-bold">ADD VICTORY POINTS →</button>
+        </div>
+      </div>
+
+      <!-- Player 2 -->
+      <div class="parchment rounded-3xl p-6 md:p-10 shadow-2xl">
+        <div class="mb-8 text-center">
+          <input id="p2name" onchange="saveGame()" value="Orcs & Goblins" class="player-name">
+        </div>
+        
+        <div class="gauge-container">
+          <div id="p2gauge" class="gauge" style="--progress: 120deg;"></div>
+          <div class="gauge-skin"></div>
+          <div class="absolute inset-0 flex items-center justify-center text-center pointer-events-none z-10">
+            <div class="text-center drop-shadow-md">
+              <div id="p2total" class="text-7xl md:text-8xl font-bold text-[#3f2a1e]">0</div>
+              <div class="text-xs tracking-[3px] text-[#8c5a2b] -mt-2">VICTORY POINTS</div>
+            </div>
+          </div>
+        </div>
+
+        <table class="w-full mt-10 text-[#3f2a1e]">
+          <thead>
+            <tr class="text-sm">
+              <th class="py-4 table-header">Turn</th>
+              <th class="py-4 table-header">VP Gained</th>
+              <th class="py-4 table-header">Cumulative</th>
+            </tr>
+          </thead>
+          <tbody id="p2log" class="text-xl"></tbody>
+        </table>
+
+        <div class="mt-8 flex gap-3">
+          <input id="p2vp" type="number" placeholder="VP" class="bg-[#3f2a1e] text-[#f5e8c7] text-center w-28 py-5 rounded-3xl text-3xl focus:outline-none">
+          <button onclick="addVP(2)" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white py-5 rounded-3xl text-lg font-bold">ADD VICTORY POINTS →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row justify-center gap-4 mt-16">
+      <button onclick="resetGame()" class="px-10 py-6 bg-red-950 hover:bg-red-900 text-[#f5e8c7] rounded-3xl border-2 border-red-800 text-lg">RESET BATTLEFIELD</button>
+      <button onclick="changeScenario()" class="px-10 py-6 bg-[#3f2a1e] hover:bg-[#5c4033] text-[#f5e8c7] rounded-3xl border-2 border-[#8c5a2b] text-lg">SET SCENARIO TURNS (6-10)</button>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="text-center mt-16 text-xs text-[#8c5a2b] border-t border-[#3f2a1e] pt-8">
+      <p>This app is unofficial and unendorsed by Games Workshop.</p>
+      <p>Created by the Warhammer The Old World Community Podcast &amp; Old World Tavern Magazine.</p>
+      <p>Support us on <a href="https://www.patreon.com/c/TheOldWorldCommunity?vanity=user" target="_blank" class="text-amber-400 hover:text-amber-300 underline">Patreon</a></p>
+    </div>
+  </div>
+
+  <script>
+    let currentTurn = 1;
+    let maxTurn = 6;
+    let p1Total = 0, p2Total = 0;
+    let p1History = [], p2History = [];
+
+    function loadGame() {
+      const saved = localStorage.getItem('oldworld_tracker');
+      if (saved) {
+        const data = JSON.parse(saved);
+        currentTurn = data.currentTurn || 1;
+        maxTurn = data.maxTurn || 6;
+        p1Total = data.p1Total || 0;
+        p2Total = data.p2Total || 0;
+        p1History = data.p1History || [];
+        p2History = data.p2History || [];
+        document.getElementById('p1name').value = data.p1Name || "Empire";
+        document.getElementById('p2name').value = data.p2Name || "Orcs & Goblins";
+        document.getElementById('turn').textContent = currentTurn;
+        document.getElementById('maxTurn').textContent = `of ${maxTurn} turns`;
+      }
+    }
+
+    function saveGame() {
+      const data = {
+        currentTurn, maxTurn, p1Total, p2Total,
+        p1History, p2History,
+        p1Name: document.getElementById('p1name').value,
+        p2Name: document.getElementById('p2name').value
+      };
+      localStorage.setItem('oldworld_tracker', JSON.stringify(data));
+    }
+
+    function updateGauges() {
+      const p1Deg = Math.min((p1Total / 150) * 360, 360);
+      const p2Deg = Math.min((p2Total / 150) * 360, 360);
+      document.getElementById('p1gauge').style.setProperty('--progress', `${p1Deg}deg`);
+      document.getElementById('p2gauge').style.setProperty('--progress', `${p2Deg}deg`);
+      document.getElementById('p1total').textContent = p1Total;
+      document.getElementById('p2total').textContent = p2Total;
+    }
+
+    function addVP(player) {
+      const input = document.getElementById(player === 1 ? 'p1vp' : 'p2vp');
+      const vp = parseInt(input.value) || 0;
+      if (vp <= 0) return;
+      if (player === 1) {
+        p1Total += vp;
+        p1History[currentTurn] = (p1History[currentTurn] || 0) + vp;
+      } else {
+        p2Total += vp;
+        p2History[currentTurn] = (p2History[currentTurn] || 0) + vp;
+      }
+      renderLogs();
+      updateGauges();
+      input.value = '';
+      saveGame();
+    }
+
+    function renderLogs() {
+      const renderLog = (id, history) => {
+        const tbody = document.getElementById(id);
+        tbody.innerHTML = '';
+        for (let t = 1; t <= currentTurn; t++) {
+          const gained = history[t] || 0;
+          let cum = 0;
+          for (let i = 1; i <= t; i++) cum += history[i] || 0;
+          tbody.innerHTML += `<tr class="text-center"><td class="py-4 turn-number">${t}</td><td class="py-4">${gained}</td><td class="py-4 font-bold">${cum}</td></tr>`;
+        }
+      };
+      renderLog('p1log', p1History);
+      renderLog('p2log', p2History);
+    }
+
+    function nextTurn() {
+      if (currentTurn < maxTurn) {
+        currentTurn++;
+        document.getElementById('turn').textContent = currentTurn;
+        saveGame();
+      }
+    }
+    function prevTurn() {
+      if (currentTurn > 1) {
+        currentTurn--;
+        document.getElementById('turn').textContent = currentTurn;
+        saveGame();
+      }
+    }
+    function resetGame() {
+      if (confirm("Reset the entire battlefield?")) {
+        currentTurn = 1; p1Total = p2Total = 0; p1History = []; p2History = [];
+        document.getElementById('turn').textContent = 1;
+        renderLogs(); updateGauges(); saveGame();
+      }
+    }
+    function changeScenario() {
+      const turns = prompt("Enter maximum turns (6–10):", maxTurn);
+      if (turns) {
+        maxTurn = parseInt(turns);
+        document.getElementById('maxTurn').textContent = `of ${maxTurn} turns`;
+        saveGame();
+      }
+    }
+
+    // Init
+    loadGame();
+    document.getElementById('maxTurn').textContent = `of ${maxTurn} turns`;
+    updateGauges();
+    renderLogs();
+    window.addEventListener('beforeunload', saveGame);
+  </script>
+</body>
+</html>
