@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oldworld-v2';
+const CACHE_NAME = 'oldworld-v3';
 const urlsToCache = [
   './',
   'index.html',
